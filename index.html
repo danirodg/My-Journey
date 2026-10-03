@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patrimonio</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Patrimonio">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root{
+  --bg:#f2f2f7; --card:#ffffff; --card2:#f4f4f7; --text:#0b0b0f; --muted:#6e6e78; --line:rgba(0,0,0,.08);
+  --accent:#0a7d4f; --accent-soft:rgba(10,125,79,.11); --pos:#118a54; --neg:#d63a3a; --warn:#b26a00;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+  --tab:rgba(249,249,251,.86);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#000000; --card:#141416; --card2:#1d1d21; --text:#f3f3f5; --muted:#8e8e98; --line:rgba(255,255,255,.08);
+    --accent:#3ddc97; --accent-soft:rgba(61,220,151,.13); --pos:#3ddc97; --neg:#ff6b6b; --warn:#f5b041;
+    --shadow:none; --tab:rgba(20,20,22,.86);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;line-height:1.35;-webkit-font-smoothing:antialiased;min-height:100vh;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+input,select{font:inherit;color:var(--text)}
+.num{font-variant-numeric:tabular-nums}
+#app{max-width:640px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 96px)}
+header.top{display:flex;align-items:center;gap:8px;min-height:44px;margin-bottom:6px}
+header.top h1{font-size:30px;font-weight:750;letter-spacing:-.02em;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.top h1.small{font-size:20px;font-weight:650}
+.icon-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--card);box-shadow:var(--shadow);flex:none}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.card{background:var(--card);border-radius:20px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.label{font-size:13px;color:var(--muted);font-weight:500}
+.big{font-size:38px;font-weight:750;letter-spacing:-.025em;margin:2px 0 4px}
+.delta{font-size:15px;font-weight:600}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .muted{color:var(--muted)}
+.chips{display:flex;gap:6px;margin:14px 0 4px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);background:var(--card2);flex:none}
+.chip.on{background:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){.chip.on{color:#04140c}}
+.section-t{display:flex;justify-content:space-between;align-items:baseline;margin:22px 4px 10px}
+.section-t h2{font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em}
+.section-t span{font-size:13px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:16px;padding:12px;box-shadow:var(--shadow);text-align:left;min-width:0}
+.stat .label{font-size:12px}
+.stat .v{font-size:17px;font-weight:700;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);text-align:left;transition:transform .12s}
+.acc:active{transform:scale(.98)}
+.flag{width:42px;height:42px;border-radius:50%;background:var(--card2);display:grid;place-items:center;font-size:22px;flex:none}
+.acc .mid{flex:1;min-width:0}
+.acc .n{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc .s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc .r{text-align:right;flex:none}
+.acc .r .v{font-weight:650}
+.pill{display:inline-block;font-size:12px;font-weight:650;padding:2px 7px;border-radius:999px;margin-top:3px}
+.pill.pos{background:color-mix(in srgb,var(--pos) 14%,transparent)}
+.pill.neg{background:color-mix(in srgb,var(--neg) 14%,transparent)}
+.pill.nil{background:var(--card2);color:var(--muted)}
+.acc.empty{opacity:.55}
+.chev{width:16px;height:16px;color:var(--muted);flex:none}
+.group-h{display:flex;justify-content:space-between;margin:18px 4px 8px;font-size:14px;color:var(--muted);font-weight:600}
+.chart{position:relative;margin-top:8px}
+.chart-tip{font-size:12px;color:var(--muted);min-height:16px;margin-bottom:4px}
+.chart-tip b{color:var(--text);font-weight:650}
+.chart svg{display:block;width:100%;touch-action:pan-y}
+.chart .empty{height:150px;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:14px;padding:0 20px;background:var(--card2);border-radius:14px}
+.rows .row{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.rows .row:last-child{border-bottom:0}
+.rows .row .k{color:var(--muted)}
+.rows .row .v{font-weight:600;text-align:right}
+.pos-item{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.pos-item:last-child{border-bottom:0}
+.pos-item .n{font-weight:600}
+.pos-item .s{font-size:13px;color:var(--muted)}
+.pos-item .r{text-align:right;flex:none}
+.bar{height:8px;border-radius:99px;background:var(--card2);overflow:hidden;margin:8px 0 6px;position:relative}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bar .mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--text);opacity:.5}
+.hero-acc{display:flex;align-items:center;gap:14px}
+.hero-acc .flag{width:54px;height:54px;font-size:28px}
+.ring-wrap{display:flex;align-items:center;gap:18px}
+.ring{width:118px;height:118px;flex:none;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .c b{font-size:24px;font-weight:750;display:block}
+.ring .c span{font-size:11px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;padding:5px 10px;border-radius:999px}
+.badge.pos{background:color-mix(in srgb,var(--pos) 14%,transparent)}
+.badge.neg{background:color-mix(in srgb,var(--neg) 14%,transparent)}
+.scen{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.scen .stat{text-align:center}
+.scen .stat.hl{outline:2px solid var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent);margin:12px 0 2px}
+.donut-wrap{display:flex;justify-content:center;margin:6px 0 14px;position:relative}
+.donut-wrap .c{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none}
+.donut-wrap .c b{font-size:20px;font-weight:750;display:block}
+.donut-wrap .c span{font-size:12px;color:var(--muted)}
+.leg{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.leg:last-child{border-bottom:0}
+.leg i{width:12px;height:12px;border-radius:4px;flex:none}
+.leg .n{flex:1;font-weight:550}
+.leg .p{color:var(--muted);font-size:14px;width:56px;text-align:right}
+.leg .v{font-weight:650;width:110px;text-align:right}
+.seg{display:flex;background:var(--card2);border-radius:12px;padding:3px;gap:3px;margin-bottom:14px}
+.seg button{flex:1;padding:8px 0;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px 2px;font-weight:550}
+.field input,.field select{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-size:16px;outline:none}
+.field input:focus{border-color:var(--accent)}
+.btn{display:block;width:100%;padding:14px;border-radius:14px;background:var(--accent);color:#fff;font-weight:650;font-size:16px;text-align:center}
+@media (prefers-color-scheme: dark){.btn{color:#04140c}}
+.btn.sec{background:var(--card2);color:var(--text)}
+.btn.danger{background:transparent;color:var(--neg)}
+.btn:disabled{opacity:.5}
+.msg{font-size:14px;padding:12px 14px;border-radius:12px;margin-bottom:14px}
+.msg.err{background:color-mix(in srgb,var(--neg) 12%,transparent);color:var(--neg)}
+.msg.info{background:var(--accent-soft);color:var(--text)}
+.foot{text-align:center;font-size:12px;color:var(--muted);margin-top:18px}
+.welcome{padding-top:40px}
+.welcome .logo{width:72px;height:72px;border-radius:18px;margin-bottom:18px}
+.welcome h1{font-size:32px;margin:0 0 8px;letter-spacing:-.02em}
+.welcome p{color:var(--muted);margin:0 0 24px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tab);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid var(--line);padding:6px 6px calc(env(safe-area-inset-bottom) + 4px);display:flex;justify-content:center;z-index:10}
+nav.tabs .in{display:flex;max-width:640px;width:100%}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--muted);padding:4px 0}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button.on{color:var(--accent)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 10px);background:var(--text);color:var(--bg);
+  padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600;z-index:20;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.on{opacity:.92}
+.ops .pos-item .s{font-size:12px}
+.more{display:block;margin:6px auto 0;font-size:14px;font-weight:600;color:var(--accent);padding:8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="tabs" id="tabs" hidden></nav>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+// ---------------- Utilidades ----------------
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+function num(v){
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  if (typeof v === 'string'){ const s = v.trim(); if (!s || s[0] === '#') return 0; const n = parseFloat(s.replace(/\s/g,'').replace(',','.')); return isFinite(n) ? n : 0; }
+  return 0;
+}
+const isNum = v => typeof v === 'number' && isFinite(v);
+function fecha(v){ if (!v) return null; const d = new Date(v); return isNaN(d) ? null : d; }
+
+const ICON = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>',
+  target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
+  pie:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3v9h9a9 9 0 1 1-9-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  chev:'<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
+};
+const PALETA = ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#64748b','#f97316'];
+
+// ---------------- Estado ----------------
+const S = {
+  cfg: Object.assign({url:'', clave:'', moneda:'EUR', auto:15, ocultar:false}, LS.get('pat_cfg', {})),
+  raw: LS.get('pat_data', null),
+  hora: LS.get('pat_time', 0),
+  m: null, view:'resumen', cuenta:null, periodo:'3M', dist:'pais', escen:7,
+  cargando:false, error:'', verOps:false
+};
+S.hide = !!S.cfg.ocultar;
+const guardarCfg = () => LS.set('pat_cfg', S.cfg);
+
+// ---------------- Modelo a partir de la hoja ----------------
+function construir(raw){
+  const D = (raw && raw.datos) || {};
+  const rates = {EUR:1};
+  (D['Divisas']||[]).forEach(r => { const m = r['Moneda'], v = num(r['Valor de 1 unidad en EUR']); if (m && v > 0) rates[m] = v; });
+
+  const cuentas = (D['Cuentas']||[]).filter(r => r['Cuenta'] && String(r['Cuenta']).trim() !== 'Total').map(r => {
+    const g = r['Ganancia desde 1 ene 2026'], rt = r['Rentabilidad desde 1 ene 2026'];
+    const mon = r['Moneda'] || 'EUR';
+    return {
+      nombre:String(r['Cuenta']), pais:r['País'] || 'Otro', bandera:r['Bandera'] || '🏦', tipo:r['Tipo'] || '', moneda:mon,
+      objetivo:String(r['¿Cuenta para el objetivo?']||'').toUpperCase().startsWith('S'),
+      aportPeriodo:num(r['Aportación por periodo (moneda cuenta)']), periodos:num(r['Periodos al año']),
+      meta:num(r['Meta anual de aportación']), limite:num(r['Límite anual de aportación']),
+      comision:isNum(r['Comisión anual (%)']) ? r['Comisión anual (%)'] : null,
+      valor:num(r['Valor actual (moneda cuenta)']), eur:num(r['Valor en EUR']),
+      aportNetas:num(r['Aportaciones netas desde 1 ene 2026']),
+      ganancia:isNum(g) ? g : null, gananciaEur:isNum(g) ? g * (rates[mon]||1) : null, rentab:isNum(rt) ? rt : null,
+      aportMesEur:num(r['Aportación mensual en EUR']), aportadoAnio:num(r['Aportado este año (moneda cuenta)']), peso:num(r['Peso sobre el total'])
+    };
+  });
+  const porNombre = {}; cuentas.forEach(c => porNombre[c.nombre] = c);
+
+  const posiciones = (D['Posiciones']||[]).filter(r => r['Cuenta'] && (r['Activo'] || num(r['Valor en EUR']))).map(r => ({
+    cuenta:String(r['Cuenta']), activo:r['Activo'] || 'Sin nombre', ticker:r['Ticker o ISIN'] || '', moneda:r['Moneda'] || 'EUR',
+    tipo:r['Tipo de activo'] || 'Otro', fuente:r['Precio desde'] || '', fechaManual:fecha(r['Fecha del dato manual']),
+    cantidad:num(r['Cantidad usada']), precio:num(r['Precio usado']), valor:num(r['Valor (moneda posición)']), eur:num(r['Valor en EUR'])
+  }));
+
+  const compras = (D['Compras']||[]).filter(r => r['Cuenta'] && fecha(r['Fecha'])).map(r => ({
+    fecha:fecha(r['Fecha']), cuenta:String(r['Cuenta']), activo:r['Activo'] || '', tipo:r['Tipo'] || '',
+    unidades:num(r['Unidades (con signo)']), precio:num(r['Precio']), importe:num(r['Importe'])
+  }));
+  const movs = (D['Movimientos']||[]).filter(r => r['Cuenta'] && fecha(r['Fecha'])).map(r => ({
+    fecha:fecha(r['Fecha']), cuenta:String(r['Cuenta']),
+    importe:num(r['Importe (moneda de la cuenta; + aportación, - retirada)']), nota:r['Nota'] || ''
+  }));
+
+  const fijas = ['Fecha','Total EUR','Total cuentas del objetivo EUR','Trayectoria del objetivo EUR'];
+  const historico = (D['Histórico']||[]).filter(r => fecha(r['Fecha'])).map(r => {
+    const porCuenta = {};
+    Object.keys(r).forEach(k => { if (!fijas.includes(k) && k) porCuenta[k] = num(r[k]); });
+    return { t:fecha(r['Fecha']), total:num(r['Total EUR']), totalObj:num(r['Total cuentas del objetivo EUR']),
+             tray:num(r['Trayectoria del objetivo EUR']), porCuenta };
+  }).sort((a,b) => a.t - b.t);
+
+  // Objetivo: columnas A-B son parámetros (la cabecera de B es la fecha de inicio), F-H la trayectoria mensual
+  const obRows = D['Objetivo'] || [];
+  const colA = 'Fecha de inicio del objetivo';
+  const ignorar = new Set([colA, '', 'Mes nº', 'Fecha', 'Trayectoria del objetivo (EUR)']);
+  let colB = null;
+  if (obRows.length) colB = Object.keys(obRows[0]).find(k => !ignorar.has(k)) || null;
+  const p = {};
+  obRows.forEach(r => { const k = r[colA]; if (k && colB) p[String(k).trim()] = r[colB]; });
+  const tray = obRows.map(r => ({ t:fecha(r['Fecha']), v:r['Trayectoria del objetivo (EUR)'] }))
+                     .filter(x => x.t && isNum(x.v)).map(x => ({t:x.t, v:x.v}));
+  const objetivo = {
+    inicio: tray.length ? tray[0].t : null,
+    anios:num(p['Años']), meta:num(p['Objetivo (EUR)']), inicial:num(p['Patrimonio inicial (EUR)']),
+    aportMes:num(p['Aportación mensual (EUR)']), rentNecesaria:isNum(p['Rentabilidad anual necesaria']) ? p['Rentabilidad anual necesaria'] : null,
+    meses:num(p['Meses transcurridos']), actual:num(p['Patrimonio actual (EUR)']), teorico:num(p['Objetivo teórico hoy (EUR)']),
+    desv:num(p['Desviación (EUR)']), desvPct:num(p['Desviación (%)']), progreso:num(p['Progreso hacia el objetivo']),
+    estado:p['Estado'] || '', escenarios:[p['Escenario 1'], p['Escenario 2'], p['Escenario 3']].map((v,i) => isNum(v) ? v : [0.05,0.07,0.09][i]),
+    tray
+  };
+
+  const total = cuentas.reduce((s,c) => s + c.eur, 0);
+  return { rates, cuentas, porNombre, posiciones, compras, movs, historico, objetivo, total, actualizado:fecha(raw && raw.actualizado) };
+}
+
+// ---------------- Formatos ----------------
+function nf(cur, dec){
+  try { return new Intl.NumberFormat('de-DE', {style:'currency', currency:cur, minimumFractionDigits:dec, maximumFractionDigits:dec}); }
+  catch(e){ return new Intl.NumberFormat('de-DE', {minimumFractionDigits:dec, maximumFractionDigits:dec}); }
+}
+const OCULTO = '••••••';
+function aMoneda(eur){ const r = S.m && S.m.rates[S.cfg.moneda]; return eur / (r || 1); }
+function money(eur, dec = 0, forzar){ if (S.hide && !forzar) return OCULTO; return nf(S.cfg.moneda, dec).format(aMoneda(eur)); }
+function moneyLocal(v, cur, dec = 0){ if (S.hide) return OCULTO; return nf(cur || 'EUR', dec).format(v); }
+function signed(eur){ if (S.hide) return OCULTO; const s = money(Math.abs(eur), 0, true); return (eur >= 0 ? '+' : '−') + s; }
+function pct(v, dec = 1, sign = true){ if (v == null || !isFinite(v)) return '—'; const s = (Math.abs(v)*100).toLocaleString('de-DE', {minimumFractionDigits:dec, maximumFractionDigits:dec}) + ' %'; return sign ? (v >= 0 ? '+' : '−') + s : s; }
+function compact(eur){
+  if (S.hide) return '•••';
+  const v = aMoneda(eur), a = Math.abs(v);
+  const sym = {EUR:'€',CAD:'$',AUD:'$',GBP:'£',USD:'$'}[S.cfg.moneda] || '';
+  if (a >= 1e6) return (v/1e6).toLocaleString('de-DE',{maximumFractionDigits:2}) + ' M' + sym;
+  if (a >= 1e3) return (v/1e3).toLocaleString('de-DE',{maximumFractionDigits:0}) + ' k' + sym;
+  return Math.round(v) + ' ' + sym;
+}
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const fCorta = d => d.getDate() + ' ' + MESES[d.getMonth()];
+const fLarga = d => d.getDate() + ' ' + MESES[d.getMonth()] + ' ' + d.getFullYear();
+const fMes = d => MESES[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2);
+function hace(ms){
+  if (!ms) return 'nunca';
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 1) return 'ahora mismo'; if (m < 60) return 'hace ' + m + ' min';
+  const h = Math.round(m / 60); if (h < 24) return 'hace ' + h + ' h';
+  return 'el ' + fLarga(new Date(ms));
+}
+const cls = v => v == null ? 'nil' : (v >= 0 ? 'pos' : 'neg');
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2200); }
+
+// ---------------- Carga de datos ----------------
+function urlApi(){
+  const u = new URL(S.cfg.url.trim());
+  u.searchParams.delete('modo');
+  u.searchParams.set('clave', S.cfg.clave.trim());
+  return u.toString();
+}
+async function cargar(silencioso){
+  if (!S.cfg.url || S.cargando) return false;
+  S.cargando = true; pintarCabecera();
+  try {
+    const r = await fetch(urlApi(), {cache:'no-store', redirect:'follow'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    if (j.error) throw new Error(j.error === 'Acceso denegado' ? 'La clave no es correcta.' : j.error);
+    if (!j.datos || !j.datos['Cuentas']) throw new Error('La hoja no devolvió datos de cuentas.');
+    S.raw = j; S.hora = Date.now(); S.error = '';
+    LS.set('pat_data', j); LS.set('pat_time', S.hora);
+    S.m = construir(j);
+    if (!silencioso) toast('Datos actualizados');
+    return true;
+  } catch(e){
+    S.error = (e && e.message && !/fetch|network|load/i.test(e.message)) ? e.message : 'No se pudo conectar. Revisa la conexión a internet.';
+    if (!silencioso) toast('No se pudo actualizar');
+    return false;
+  } finally {
+    S.cargando = false; render();
+  }
+}
+
+// ---------------- Gráficos ----------------
+const CH = {}; let chN = 0;
+function lineChart(spec){ const id = 'ch' + (++chN); CH[id] = spec; return `<div class="chart" id="${id}"><div class="chart-tip"></div><div class="chart-svg"></div></div>`; }
+function dibujarGraficos(){ Object.keys(CH).forEach(id => { const el = document.getElementById(id); if (el) dibujarLinea(el, CH[id]); delete CH[id]; }); }
+
+function dibujarLinea(el, spec){
+  const series = spec.series.filter(s => s.pts && s.pts.length);
+  const tip = el.querySelector('.chart-tip'), box = el.querySelector('.chart-svg');
+  const totalPts = series.reduce((n,s) => n + s.pts.length, 0);
+  if (!series.length || totalPts < 2 || (series.length === 1 && series[0].pts.length < 2)){
+    box.innerHTML = `<div class="empty">${esc(spec.vacio || 'Todavía no hay suficientes datos. El gráfico se irá llenando con las fotos diarias.')}</div>`;
+    tip.innerHTML = ''; return;
+  }
+  const W = Math.max(260, el.clientWidth), H = spec.h || 170, padT = 10, padB = 22, padL = 2, padR = 2;
+  let t0 = Infinity, t1 = -Infinity, v0 = Infinity, v1 = -Infinity;
+  series.forEach(s => s.pts.forEach(p => { t0 = Math.min(t0, +p.t); t1 = Math.max(t1, +p.t); v0 = Math.min(v0, p.v); v1 = Math.max(v1, p.v); }));
+  if (spec.desdeCero) v0 = Math.min(0, v0);
+  if (t1 === t0) t1 = t0 + 864e5;
+  if (v1 === v0){ v1 += Math.abs(v1)*0.05 || 1; v0 -= Math.abs(v0)*0.05 || 1; }
+  const pad = (v1 - v0) * 0.08; v1 += pad; if (!spec.desdeCero) v0 -= pad;
+  const X = t => padL + (t - t0) / (t1 - t0) * (W - padL - padR);
+  const Y = v => padT + (1 - (v - v0) / (v1 - v0)) * (H - padT - padB);
+  let g = '';
+  for (let i = 0; i < 3; i++){
+    const v = v0 + (v1 - v0) * (i + 0.5) / 3, y = Y(v);
+    g += `<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="4" y="${y - 4}" font-size="10" fill="var(--muted)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(compact(v))}</text>`;
+  }
+  const fx = spec.fechaFmt || ((t1 - t0) > 400*864e5 ? fMes : fCorta);
+  g += `<text x="2" y="${H - 5}" font-size="10" fill="var(--muted)">${esc(fx(new Date(t0)))}</text><text x="${W - 2}" y="${H - 5}" font-size="10" fill="var(--muted)" text-anchor="end">${esc(fx(new Date(t1)))}</text>`;
+  let defs = '', paths = '';
+  series.forEach((s, i) => {
+    const d = s.pts.map((p, j) => (j ? 'L' : 'M') + X(+p.t).toFixed(1) + ' ' + Y(p.v).toFixed(1)).join(' ');
+    if (s.area){
+      const gid = 'gr' + Math.random().toString(36).slice(2);
+      defs += `<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s.color}" stop-opacity=".28"/><stop offset="1" stop-color="${s.color}" stop-opacity="0"/></linearGradient>`;
+      const last = s.pts[s.pts.length - 1], first = s.pts[0];
+      paths += `<path d="${d} L${X(+last.t).toFixed(1)} ${H - padB} L${X(+first.t).toFixed(1)} ${H - padB} Z" fill="url(#${gid})"/>`;
+    }
+    paths += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.ancho || 2.4}" stroke-linejoin="round" stroke-linecap="round" ${s.dash ? 'stroke-dasharray="5 5"' : ''}/>`;
+  });
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}"><defs>${defs}</defs>${g}${paths}
+    <line class="cur" y1="${padT}" y2="${H - padB}" stroke="var(--muted)" stroke-width="1" opacity="0"/>
+    ${series.map((s,i) => `<circle class="dot" data-i="${i}" r="4.5" fill="${s.color}" stroke="var(--card)" stroke-width="2" opacity="0"/>`).join('')}
+    <rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/></svg>`;
+  const svg = box.querySelector('svg'), cur = svg.querySelector('.cur'), dots = svg.querySelectorAll('.dot');
+  const cerca = (pts, t) => { let b = pts[0]; for (const p of pts) if (Math.abs(+p.t - t) < Math.abs(+b.t - t)) b = p; return b; };
+  const tipTxt = (t, puntos) => `<b>${esc(fLarga(new Date(t)))}</b> · ` + puntos.map((p,i) => `<span style="color:${series[i].color}">●</span> ${esc(series[i].nombre ? series[i].nombre + ' ' : '')}<b>${esc(money(p.v))}</b>`).join(' &nbsp;');
+  const reset = () => {
+    cur.setAttribute('opacity', 0); dots.forEach(d => d.setAttribute('opacity', 0));
+    if (spec.hoy){ const t = Math.min(Date.now(), t1); const base = cerca(series[0].pts, t); tip.innerHTML = tipTxt(+base.t, series.map(s => cerca(s.pts, +base.t))); }
+    else tip.innerHTML = tipTxt(t1, series.map(s => s.pts[s.pts.length - 1]));
+  };
+  const mover = ev => {
+    const r = svg.getBoundingClientRect(); const x = (ev.clientX - r.left) * (W / r.width);
+    const t = t0 + (x - padL) / (W - padL - padR) * (t1 - t0);
+    const base = cerca(series[0].pts, t);
+    const puntos = series.map(s => cerca(s.pts, +base.t));
+    cur.setAttribute('x1', X(+base.t)); cur.setAttribute('x2', X(+base.t)); cur.setAttribute('opacity', .6);
+    dots.forEach((d, i) => { d.setAttribute('cx', X(+puntos[i].t)); d.setAttribute('cy', Y(puntos[i].v)); d.setAttribute('opacity', 1); });
+    tip.innerHTML = tipTxt(+base.t, puntos);
+  };
+  svg.addEventListener('pointermove', mover); svg.addEventListener('pointerdown', mover);
+  svg.addEventListener('pointerleave', reset); svg.addEventListener('pointercancel', reset);
+  reset();
+}
+
+function donut(items, centro){
+  const tot = items.reduce((s,i) => s + i.v, 0) || 1, R = 70, C = 2 * Math.PI * R;
+  let off = 0, arcs = '';
+  items.forEach(it => {
+    const f = it.v / tot, len = Math.max(0, f * C - (items.length > 1 ? 2 : 0));
+    arcs += `<circle r="${R}" cx="90" cy="90" fill="none" stroke="${it.color}" stroke-width="22" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}"/>`;
+    off += f * C;
+  });
+  return `<div class="donut-wrap"><svg width="180" height="180" viewBox="0 0 180 180" style="transform:rotate(-90deg)"><circle r="${R}" cx="90" cy="90" fill="none" stroke="var(--card2)" stroke-width="22"/>${arcs}</svg><div class="c"><div><b class="num">${centro[0]}</b><span>${centro[1]}</span></div></div></div>`;
+}
+
+// ---------------- Helpers de series ----------------
+const PERIODOS = [['1S',7],['1M',30],['3M',91],['YTD',0],['1A',365],['Todo',-1]];
+function cortar(pts, per){
+  const d = (PERIODOS.find(p => p[0] === per) || PERIODOS[2])[1];
+  if (d < 0) return pts;
+  const ahora = new Date();
+  const desde = d === 0 ? new Date(ahora.getFullYear(), 0, 1) : new Date(Date.now() - d * 864e5);
+  return pts.filter(p => p.t >= desde);
+}
+function serieTotal(sel){
+  const m = S.m;
+  const pts = m.historico.map(h => ({t:h.t, v:sel(h)})).filter(p => isFinite(p.v));
+  return pts;
+}
+function conAhora(pts, v){ const r = pts.slice(); r.push({t:new Date(), v}); return r; }
+
+// ---------------- Vistas ----------------
+function cabecera(titulo, opts = {}){
+  const back = opts.back ? `<button class="icon-btn" data-act="back" aria-label="Atrás">${ICON.back}</button>` : '';
+  const acciones = opts.sinAcciones ? '' : `
+    <button class="icon-btn" data-act="ocultar" aria-label="Ocultar importes">${S.hide ? ICON.eyeOff : ICON.eye}</button>
+    <button class="icon-btn ${S.cargando ? 'spin' : ''}" id="btnRefresh" data-act="refresh" aria-label="Actualizar">${ICON.refresh}</button>`;
+  return `<header class="top">${back}<h1 class="${opts.back ? 'small' : ''}">${esc(titulo)}</h1>${acciones}</header>`;
+}
+function pintarCabecera(){ const b = $('#btnRefresh'); if (b) b.classList.toggle('spin', S.cargando); }
+
+function chipsPeriodo(){
+  return `<div class="chips">${PERIODOS.map(p => `<button class="chip ${S.periodo === p[0] ? 'on' : ''}" data-per="${p[0]}">${p[0]}</button>`).join('')}</div>`;
+}
+function botonCuenta(c){
+  return `<button class="acc ${c.eur ? '' : 'empty'}" data-cuenta="${esc(c.nombre)}">
+    <div class="flag">${esc(c.bandera)}</div>
+    <div class="mid"><div class="n">${esc(c.nombre)}</div><div class="s">${esc(c.tipo)} · ${esc(c.moneda)}</div></div>
+    <div class="r"><div class="v num">${money(c.eur)}</div>
+      <span class="pill ${cls(c.rentab)} num">${c.rentab == null ? (c.eur ? 'sin dato' : 'vacía') : pct(c.rentab)}</span></div>
+    ${ICON.chev}</button>`;
+}
+
+function vResumen(){
+  const m = S.m;
+  const hist = serieTotal(h => h.total);
+  const pts = cortar(conAhora(hist, m.total), S.periodo);
+  const ini = pts.length > 1 ? pts[0].v : null;
+  const dif = ini != null ? m.total - ini : null;
+  const ganancia = m.cuentas.reduce((s,c) => s + (c.gananciaEur || 0), 0);
+  const aport = m.cuentas.reduce((s,c) => s + (c.objetivo ? c.aportMesEur : 0), 0);
+  const prog = m.objetivo.progreso;
+  const color = (dif == null || dif >= 0) ? 'var(--pos)' : 'var(--neg)';
+  const orden = m.cuentas.slice().sort((a,b) => b.eur - a.eur);
+  return cabecera('Patrimonio') + aviso() + `
+  <div class="card">
+    <div class="label">Total</div>
+    <div class="big num">${money(m.total)}</div>
+    <div class="delta num ${dif == null ? 'muted' : (dif >= 0 ? 'pos' : 'neg')}">${dif == null ? 'Sin histórico para este periodo' : signed(dif) + ' (' + pct(ini ? dif/ini : null) + ') · ' + S.periodo}</div>
+    ${chipsPeriodo()}
+    ${lineChart({series:[{pts, color, area:true}]})}
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="label">Ganancia 2026</div><div class="v num ${ganancia >= 0 ? 'pos' : 'neg'}">${signed(ganancia)}</div></div>
+    <div class="stat"><div class="label">Aportación/mes</div><div class="v num">${money(aport)}</div></div>
+    <button class="stat" data-nav="objetivo"><div class="label">Objetivo</div><div class="v num">${pct(prog, 1, false)}</div></button>
+  </div>
+  <div class="section-t"><h2>Cuentas</h2><span>${m.cuentas.length} cuentas</span></div>
+  ${orden.map(botonCuenta).join('')}
+  <div class="foot">Datos ${hace(S.hora)}</div>`;
+}
+
+function vCuentas(){
+  const m = S.m, grupos = {};
+  m.cuentas.forEach(c => (grupos[c.pais] = grupos[c.pais] || []).push(c));
+  const orden = Object.keys(grupos).sort((a,b) => grupos[b].reduce((s,c)=>s+c.eur,0) - grupos[a].reduce((s,c)=>s+c.eur,0));
+  return cabecera('Cuentas') + aviso() + orden.map(p => {
+    const tot = grupos[p].reduce((s,c) => s + c.eur, 0);
+    return `<div class="group-h"><span>${esc(grupos[p][0].bandera)} ${esc(p)}</span><span class="num">${money(tot)} · ${pct(m.total ? tot/m.total : 0, 0, false)}</span></div>` +
+      grupos[p].slice().sort((a,b) => b.eur - a.eur).map(botonCuenta).join('');
+  }).join('') + `<div class="foot">Datos ${hace(S.hora)}</div>`;
+}
+
+function vCuenta(){
+  const m = S.m, c = m.porNombre[S.cuenta];
+  if (!c){ S.view = 'cuentas'; return vCuentas(); }
+  const hist = m.historico.filter(h => c.nombre in h.porCuenta).map(h => ({t:h.t, v:h.porCuenta[c.nombre]}));
+  const pts = cortar(conAhora(hist, c.eur), S.periodo);
+  const pos = m.posiciones.filter(p => p.cuenta === c.nombre && (p.eur || p.cantidad));
+  const ops = m.compras.filter(o => o.cuenta === c.nombre).map(o => ({fecha:o.fecha, t:o.tipo, d:o.activo + (o.unidades ? ' · ' + o.unidades.toLocaleString('de-DE',{maximumFractionDigits:4}) + ' u. a ' + o.precio.toLocaleString('de-DE',{maximumFractionDigits:4}) : ''), v:o.importe}))
+    .concat(m.movs.filter(o => o.cuenta === c.nombre).map(o => ({fecha:o.fecha, t:o.importe >= 0 ? 'Aportación' : 'Retirada', d:o.nota, v:o.importe})))
+    .sort((a,b) => b.fecha - a.fecha);
+  const verN = S.verOps ? ops.length : 8;
+  const extranjera = c.moneda !== S.cfg.moneda;
+  let tfsa = '';
+  if (c.meta > 0 || c.limite > 0){
+    const tope = Math.max(c.limite, c.meta, c.aportadoAnio) || 1;
+    tfsa = `<div class="card"><div class="label">Aportado en ${new Date().getFullYear()}</div>
+      <div class="big num" style="font-size:28px">${moneyLocal(c.aportadoAnio, c.moneda)}</div>
+      <div class="bar"><i style="width:${Math.min(100, c.aportadoAnio/tope*100)}%"></i>${c.meta && c.limite ? `<span class="mark" style="left:${c.meta/tope*100}%"></span>` : ''}</div>
+      <div class="label num">${c.meta ? 'Meta ' + moneyLocal(c.meta, c.moneda) : ''}${c.meta && c.limite ? ' · ' : ''}${c.limite ? 'Límite ' + moneyLocal(c.limite, c.moneda) : ''}${c.meta ? ' · faltan ' + moneyLocal(Math.max(0, c.meta - c.aportadoAnio), c.moneda) : ''}</div></div>`;
+  }
+  const comision = c.comision == null ? null : (c.comision < 0.03 ? c.comision : c.comision / 100);
+  return cabecera(c.nombre, {back:true}) + `
+  <div class="card">
+    <div class="hero-acc"><div class="flag">${esc(c.bandera)}</div><div><div class="label">${esc(c.tipo)} · ${esc(c.pais)}</div>
+      <div class="big num" style="font-size:32px">${moneyLocal(c.valor, c.moneda)}</div>
+      ${extranjera ? `<div class="label num">≈ ${money(c.eur)}</div>` : ''}</div></div>
+    ${chipsPeriodo()}
+    ${lineChart({series:[{pts, color:'var(--accent)', area:true}], vacio:'Este gráfico se irá llenando con las fotos diarias del histórico.'})}
+  </div>
+  <div class="card rows">
+    <div class="row"><span class="k">Ganancia desde 1 ene</span><span class="v num ${cls(c.ganancia)}">${c.ganancia == null ? '—' : (S.hide ? OCULTO : (c.ganancia >= 0 ? '+' : '−') + moneyLocal(Math.abs(c.ganancia), c.moneda))}</span></div>
+    <div class="row"><span class="k">Rentabilidad desde 1 ene</span><span class="v num ${cls(c.rentab)}">${pct(c.rentab)}</span></div>
+    <div class="row"><span class="k">Aportaciones netas desde 1 ene</span><span class="v num">${moneyLocal(c.aportNetas, c.moneda)}</span></div>
+    ${c.aportPeriodo ? `<div class="row"><span class="k">Aportación por periodo</span><span class="v num">${moneyLocal(c.aportPeriodo, c.moneda, 2)} × ${c.periodos}/año</span></div>` : ''}
+    <div class="row"><span class="k">Aportación mensual</span><span class="v num">${money(c.aportMesEur)}</span></div>
+    <div class="row"><span class="k">Peso sobre el total</span><span class="v num">${pct(c.peso, 1, false)}</span></div>
+    ${comision != null ? `<div class="row"><span class="k">Comisión anual</span><span class="v num">${pct(comision, 2, false)}</span></div>` : ''}
+    <div class="row"><span class="k">Cuenta para el objetivo</span><span class="v">${c.objetivo ? 'Sí' : 'No'}</span></div>
+  </div>
+  ${tfsa}
+  <div class="section-t"><h2>Posiciones</h2><span>${pos.length}</span></div>
+  <div class="card" style="padding-top:6px;padding-bottom:6px">${pos.length ? pos.map(p => `
+    <div class="pos-item"><div><div class="n">${esc(p.activo)}</div>
+      <div class="s num">${esc(p.tipo)}${p.ticker ? ' · ' + esc(p.ticker) : ''}${p.cantidad && p.precio && p.cantidad !== 1 ? ' · ' + (S.hide ? '•••' : p.cantidad.toLocaleString('de-DE',{maximumFractionDigits:4})) + ' × ' + p.precio.toLocaleString('de-DE',{maximumFractionDigits:4}) : ''}${p.fechaManual ? ' · dato del ' + fCorta(p.fechaManual) : ''}</div></div>
+      <div class="r"><div class="n num">${moneyLocal(p.valor, p.moneda)}</div>${p.moneda !== S.cfg.moneda ? `<div class="s num">${money(p.eur)}</div>` : ''}</div></div>`).join('')
+    : '<div class="pos-item"><div class="s">Sin posiciones con valor.</div></div>'}</div>
+  ${ops.length ? `<div class="section-t"><h2>Operaciones</h2><span>${ops.length}</span></div>
+  <div class="card ops" style="padding-top:6px;padding-bottom:6px">${ops.slice(0, verN).map(o => `
+    <div class="pos-item"><div><div class="n">${esc(o.t)}</div><div class="s">${esc(fLarga(o.fecha))}${o.d ? ' · ' + esc(o.d) : ''}</div></div>
+    <div class="r"><div class="n num ${o.v >= 0 ? '' : 'neg'}">${S.hide ? OCULTO : (o.v >= 0 ? '' : '−') + nf(c.moneda, 2).format(Math.abs(o.v))}</div></div></div>`).join('')}
+    ${ops.length > verN ? `<button class="more" data-act="verops">Ver las ${ops.length}</button>` : ''}</div>` : ''}
+  <div class="foot">Datos ${hace(S.hora)}</div>`;
+}
+
+function fv(rAnual, meses, aport, pv){
+  const i = Math.pow(1 + rAnual, 1/12) - 1;
+  if (Math.abs(i) < 1e-12) return pv + aport * meses;
+  const f = Math.pow(1 + i, meses);
+  return pv * f + aport * (f - 1) / i;
+}
+
+function vObjetivo(){
+  const m = S.m, o = m.objetivo;
+  const actual = m.cuentas.reduce((s,c) => s + (c.objetivo ? c.eur : 0), 0) || o.actual;
+  const prog = o.meta ? actual / o.meta : o.progreso;
+  const desv = o.teorico ? actual - o.teorico : o.desv;
+  const restante = Math.max(0, Math.round(o.anios * 12 - o.meses));
+  const fin = o.inicio ? new Date(o.inicio.getFullYear(), o.inicio.getMonth() + Math.round(o.anios*12), o.inicio.getDate()) : null;
+  const R = 50, C = 2*Math.PI*R, L = Math.min(1, Math.max(0, prog)) * C;
+  const real = conAhora(m.historico.map(h => ({t:h.t, v:h.totalObj})), actual);
+  const esc3 = o.escenarios.map(r => ({r, v:fv(r, restante, o.aportMes, actual)}));
+  const rPers = S.escen / 100, vPers = fv(rPers, restante, o.aportMes, actual);
+  S._obj = {restante, aportMes:o.aportMes, actual, meta:o.meta};
+  return cabecera('Objetivo') + aviso() + `
+  <div class="card">
+    <div class="ring-wrap">
+      <div class="ring"><svg width="118" height="118" viewBox="0 0 118 118"><circle r="${R}" cx="59" cy="59" fill="none" stroke="var(--card2)" stroke-width="12"/>
+        <circle r="${R}" cx="59" cy="59" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${L} ${C - L}"/></svg>
+        <div class="c"><div><b class="num">${pct(prog, 1, false)}</b><span>conseguido</span></div></div></div>
+      <div style="min-width:0">
+        <div class="label">Meta${fin ? ' para ' + fMes(fin) : ''}</div>
+        <div class="big num" style="font-size:28px">${money(o.meta)}</div>
+        <span class="badge ${desv >= 0 ? 'pos' : 'neg'} num">${desv >= 0 ? '▲ Por encima' : '▼ Por debajo'} · ${signed(desv)}</span>
+      </div>
+    </div>
+    ${lineChart({series:[{pts:o.tray, color:'var(--muted)', dash:true, ancho:1.8, nombre:'Plan'}, {pts:real, color:'var(--accent)', area:false, nombre:'Real'}],
+      fechaFmt:fMes, desdeCero:false, hoy:true, vacio:'Falta la trayectoria del objetivo en la hoja.'})}
+  </div>
+  <div class="card rows">
+    <div class="row"><span class="k">Patrimonio actual (cuentas del objetivo)</span><span class="v num">${money(actual)}</span></div>
+    <div class="row"><span class="k">Debería llevar hoy</span><span class="v num">${money(o.teorico)}</span></div>
+    <div class="row"><span class="k">Patrimonio inicial</span><span class="v num">${money(o.inicial)}</span></div>
+    <div class="row"><span class="k">Aportación mensual</span><span class="v num">${money(o.aportMes)}</span></div>
+    <div class="row"><span class="k">Rentabilidad anual necesaria</span><span class="v num">${pct(o.rentNecesaria, 1, false)}</span></div>
+    <div class="row"><span class="k">Tiempo</span><span class="v num">${o.meses} de ${Math.round(o.anios*12)} meses</span></div>
+  </div>
+  <div class="section-t"><h2>Escenarios</h2><span>${restante} meses restantes</span></div>
+  <div class="scen">${esc3.map(e => `<div class="stat ${Math.abs(e.r*100 - S.escen) < .01 ? 'hl' : ''}"><div class="label">Al ${pct(e.r, 0, false)}</div>
+    <div class="v num">${compact(e.v)}</div><div class="label num ${e.v >= o.meta ? 'pos' : 'neg'}">${pct(o.meta ? e.v/o.meta : 0, 0, false)} meta</div></div>`).join('')}</div>
+  <div class="card" style="margin-top:14px">
+    <div class="label">Prueba otra rentabilidad: <b style="color:var(--text)" id="escLbl">${S.escen.toLocaleString('de-DE')} % anual</b></div>
+    <input type="range" min="0" max="15" step="0.5" value="${S.escen}" id="rngEsc">
+    <div class="rows"><div class="row"><span class="k">Patrimonio al final</span><span class="v num" id="escFin">${money(vPers)}</span></div>
+    <div class="row"><span class="k">Frente a la meta</span><span class="v num ${vPers >= o.meta ? 'pos' : 'neg'}" id="escDif">${signed(vPers - o.meta)}</span></div></div>
+  </div>
+  <div class="foot">Datos ${hace(S.hora)}</div>`;
+}
+
+function vDistrib(){
+  const m = S.m, agr = {};
+  const add = (k, v, extra) => { if (!(v > 0)) return; agr[k] = agr[k] || {v:0, extra}; agr[k].v += v; };
+  if (S.dist === 'pais') m.cuentas.forEach(c => add(c.pais, c.eur, c.bandera));
+  else if (S.dist === 'activo') (m.posiciones.length ? m.posiciones : []).forEach(p => add(p.tipo, p.eur));
+  else if (S.dist === 'moneda') (m.posiciones.length ? m.posiciones.map(p => ({k:p.moneda, v:p.eur})) : m.cuentas.map(c => ({k:c.moneda, v:c.eur}))).forEach(x => add(x.k, x.v));
+  else m.cuentas.forEach(c => add(c.nombre, c.eur, c.bandera));
+  const items = Object.keys(agr).map(k => ({k, v:agr[k].v, extra:agr[k].extra})).sort((a,b) => b.v - a.v)
+    .map((it, i) => Object.assign(it, {color:PALETA[i % PALETA.length]}));
+  const tot = items.reduce((s,i) => s + i.v, 0);
+  const tabs = [['pais','País'],['activo','Activo'],['moneda','Moneda'],['cuenta','Cuenta']];
+  return cabecera('Distribución') + aviso() + `
+  <div class="seg">${tabs.map(t => `<button class="${S.dist === t[0] ? 'on' : ''}" data-dist="${t[0]}">${t[1]}</button>`).join('')}</div>
+  <div class="card">
+    ${items.length ? donut(items, [compact(tot), items.length + (items.length === 1 ? ' grupo' : ' grupos')]) : '<div class="chart"><div class="empty">Sin datos</div></div>'}
+    ${items.map(it => `<div class="leg"><i style="background:${it.color}"></i><span class="n">${it.extra ? esc(it.extra) + ' ' : ''}${esc(it.k)}</span>
+      <span class="p num">${pct(tot ? it.v/tot : 0, 1, false)}</span><span class="v num">${money(it.v)}</span></div>`).join('')}
+  </div>
+  <div class="foot">Valores convertidos a ${esc(S.cfg.moneda)} con el cambio de hoy</div>`;
+}
+
+function vAjustes(){
+  const monedas = Object.keys(S.m ? S.m.rates : {EUR:1});
+  const cambio = S.m ? monedas.filter(x => x !== 'EUR').map(x => `1 ${x} = ${S.m.rates[x].toLocaleString('de-DE',{maximumFractionDigits:4})} €`).join(' · ') : '';
+  return cabecera('Ajustes', {sinAcciones:true}) + `
+  <div class="card">
+    <div class="label" style="margin-bottom:8px">Moneda para mostrar</div>
+    <div class="seg" style="margin-bottom:6px">${monedas.map(x => `<button class="${S.cfg.moneda === x ? 'on' : ''}" data-mon="${x}">${x}</button>`).join('')}</div>
+    <div class="label num">${esc(cambio)}</div>
+  </div>
+  <div class="card">
+    <div class="label" style="margin-bottom:8px">Actualización automática</div>
+    <div class="seg" style="margin-bottom:6px">${[[0,'No'],[5,'5 min'],[15,'15 min'],[60,'1 h']].map(a => `<button class="${S.cfg.auto === a[0] ? 'on' : ''}" data-auto="${a[0]}">${a[1]}</button>`).join('')}</div>
+    <div class="label">Además se actualiza al abrir la app. Último dato: ${hace(S.hora)}.</div>
+    <button class="btn sec" style="margin-top:14px" data-act="refresh">Actualizar ahora</button>
+  </div>
+  <div class="card">
+    <div class="label" style="margin-bottom:8px">Privacidad</div>
+    <div class="seg" style="margin-bottom:6px"><button class="${!S.cfg.ocultar ? 'on' : ''}" data-ocu="0">Mostrar importes</button><button class="${S.cfg.ocultar ? 'on' : ''}" data-ocu="1">Ocultar al abrir</button></div>
+    <div class="label">El ojo de arriba muestra u oculta los importes en cualquier momento.</div>
+  </div>
+  <div class="card">
+    <div class="field"><label>Dirección de la hoja (URL que termina en /exec)</label><input id="inUrl" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(S.cfg.url)}"></div>
+    <div class="field"><label>Clave</label><input id="inClave" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(S.cfg.clave)}"></div>
+    <button class="btn" data-act="guardar">Guardar y probar</button>
+  </div>
+  <button class="btn danger" data-act="borrar">Borrar los datos de este dispositivo</button>
+  <div class="foot">Los datos solo se guardan en este iPhone y en tu Google Sheets.</div>`;
+}
+
+function vBienvenida(){
+  return `<div class="welcome">
+    <img class="logo" src="icon-180.png" alt="">
+    <h1>Patrimonio</h1>
+    <p>Conecta la app con tu Google Sheets. Solo hace falta una vez en cada dispositivo.</p>
+    ${S.error ? `<div class="msg err">${esc(S.error)}</div>` : ''}
+    <div class="field"><label>Dirección de la hoja (URL que termina en /exec)</label><input id="inUrl" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(S.cfg.url)}"></div>
+    <div class="field"><label>Clave</label><input id="inClave" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(S.cfg.clave)}"></div>
+    <button class="btn" data-act="guardar" ${S.cargando ? 'disabled' : ''}>${S.cargando ? 'Conectando…' : 'Conectar'}</button>
+    <p style="margin-top:18px;font-size:13px">Consejo: si pegas la URL completa de la prueba (con <b>?clave=…</b>), la clave se rellena sola.</p>
+  </div>`;
+}
+
+function aviso(){
+  if (!S.error) return '';
+  return `<div class="msg err">${esc(S.error)} Se muestran los últimos datos guardados (${hace(S.hora)}).</div>`;
+}
+
+const TABS = [['resumen','Resumen',ICON.home],['cuentas','Cuentas',ICON.list],['objetivo','Objetivo',ICON.target],['distrib','Distribución',ICON.pie],['ajustes','Ajustes',ICON.gear]];
+function render(){
+  const app = $('#app'), tabs = $('#tabs');
+  if (!S.m){
+    app.innerHTML = vBienvenida(); tabs.hidden = true; return;
+  }
+  const v = {resumen:vResumen, cuentas:vCuentas, cuenta:vCuenta, objetivo:vObjetivo, distrib:vDistrib, ajustes:vAjustes}[S.view] || vResumen;
+  app.innerHTML = v();
+  const activa = S.view === 'cuenta' ? (S.desde || 'resumen') : S.view;
+  tabs.innerHTML = `<div class="in">${TABS.map(t => `<button class="${activa === t[0] ? 'on' : ''}" data-nav="${t[0]}">${t[2]}<span>${t[1]}</span></button>`).join('')}</div>`;
+  tabs.hidden = false;
+  dibujarGraficos();
+}
+function ir(view, extra){
+  if (view === 'cuenta'){ S.desde = S.view === 'cuenta' ? S.desde : S.view; S.cuenta = extra; S.verOps = false; }
+  S.view = view; render(); window.scrollTo(0, 0);
+}
+
+// ---------------- Eventos ----------------
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (d.nav) return ir(d.nav);
+  if (d.cuenta) return ir('cuenta', d.cuenta);
+  if (d.per){ S.periodo = d.per; return render(); }
+  if (d.dist){ S.dist = d.dist; return render(); }
+  if (d.mon){ S.cfg.moneda = d.mon; guardarCfg(); return render(); }
+  if (d.auto != null){ S.cfg.auto = +d.auto; guardarCfg(); programarAuto(); return render(); }
+  if (d.ocu != null){ S.cfg.ocultar = d.ocu === '1'; S.hide = S.cfg.ocultar; guardarCfg(); return render(); }
+  switch (d.act){
+    case 'back': return ir(S.desde || 'resumen');
+    case 'refresh': return cargar(false);
+    case 'ocultar': S.hide = !S.hide; return render();
+    case 'verops': S.verOps = true; return render();
+    case 'guardar': {
+      let url = ($('#inUrl').value || '').trim(), clave = ($('#inClave').value || '').trim();
+      try { const u = new URL(url); const k = u.searchParams.get('clave'); if (k && !clave) clave = k; u.search = ''; u.hash = ''; url = u.toString(); }
+      catch(e){ S.error = 'La dirección no es válida. Debe empezar por https://script.google.com/'; return render(); }
+      if (!clave){ S.error = 'Falta la clave.'; return render(); }
+      S.cfg.url = url; S.cfg.clave = clave; guardarCfg();
+      const ok = await cargar(true);
+      if (ok){ toast('Conectado'); if (S.view === 'ajustes') ir('ajustes'); else ir('resumen'); }
+      return;
+    }
+    case 'borrar':
+      if (!confirm('¿Borrar la conexión y los datos guardados en este dispositivo? Tu Google Sheets no se toca.')) return;
+      ['pat_cfg','pat_data','pat_time'].forEach(LS.del);
+      location.reload(); return;
+  }
+});
+document.addEventListener('input', ev => {
+  if (ev.target.id === 'rngEsc' && S._obj){
+    S.escen = +ev.target.value; const o = S._obj, v = fv(S.escen / 100, o.restante, o.aportMes, o.actual);
+    $('#escLbl').textContent = S.escen.toLocaleString('de-DE') + ' % anual';
+    $('#escFin').textContent = money(v);
+    const d = $('#escDif'); d.textContent = signed(v - o.meta); d.className = 'v num ' + (v >= o.meta ? 'pos' : 'neg');
+  }
+});
+let autoT = null;
+function programarAuto(){ clearInterval(autoT); if (S.cfg.auto > 0) autoT = setInterval(() => { if (!document.hidden) cargar(true); }, S.cfg.auto * 60000); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.cfg.url && Date.now() - S.hora > 5 * 60000) cargar(true); });
+let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => { if (S.m) render(); }, 200); });
+
+// ---------------- Arranque ----------------
+if (S.raw){ try { S.m = construir(S.raw); } catch(e){ S.m = null; } }
+render();
+if (S.cfg.url) cargar(true);
+programarAuto();
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
