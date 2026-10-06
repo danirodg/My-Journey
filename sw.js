@@ -1,6 +1,6 @@
 // Guarda la app en el iPhone para que abra rápido y sin conexión.
 // Los datos de la hoja NO se guardan aquí: siempre se piden a Google.
-const VERSION = 'patrimonio-v1';
+const VERSION = 'patrimonio-v3';
 const ARCHIVOS = ['./', 'index.html', 'manifest.json', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

@@ -287,6 +287,16 @@ function compact(eur){
   if (a >= 1e3) return (v/1e3).toLocaleString('de-DE',{maximumFractionDigits:0}) + ' k' + sym;
   return Math.round(v) + ' ' + sym;
 }
+function ejeLabel(v, rango, cur){
+  if (S.hide) return '•••';
+  const sym = {EUR:'€',CAD:'$',AUD:'$',GBP:'£',USD:'$'}[cur] || '';
+  const a = Math.abs(v), r = Math.abs(rango);
+  if (r < 3000) return Math.round(v).toLocaleString('de-DE') + ' ' + sym;
+  if (r < 30000 && a >= 1e3 && a < 1e6) return (v/1e3).toLocaleString('de-DE', {minimumFractionDigits:1, maximumFractionDigits:1}) + ' k' + sym;
+  if (a >= 1e6) return (v/1e6).toLocaleString('de-DE', {maximumFractionDigits:2}) + ' M' + sym;
+  if (a >= 1e3) return Math.round(v/1e3).toLocaleString('de-DE') + ' k' + sym;
+  return Math.round(v) + ' ' + sym;
+}
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const fCorta = d => d.getDate() + ' ' + MESES[d.getMonth()];
 const fLarga = d => d.getDate() + ' ' + MESES[d.getMonth()] + ' ' + d.getFullYear();
@@ -340,8 +350,10 @@ function dibujarLinea(el, spec){
   const series = spec.series.filter(s => s.pts && s.pts.length);
   const tip = el.querySelector('.chart-tip'), box = el.querySelector('.chart-svg');
   const totalPts = series.reduce((n,s) => n + s.pts.length, 0);
-  if (!series.length || totalPts < 2 || (series.length === 1 && series[0].pts.length < 2)){
-    box.innerHTML = `<div class="empty">${esc(spec.vacio || 'Todavía no hay suficientes datos. El gráfico se irá llenando con las fotos diarias.')}</div>`;
+  const p0 = series.length ? series[0].pts : [];
+  const dias = p0.length ? (+p0[p0.length - 1].t - +p0[0].t) / 864e5 : 0;
+  if (!series.length || totalPts < 2 || p0.length < 3 || dias < 2){
+    box.innerHTML = `<div class="empty">${esc(spec.vacio || 'Todavía hay pocos datos. El gráfico aparecerá cuando haya unos días de fotos guardadas.')}</div>`;
     tip.innerHTML = ''; return;
   }
   const W = Math.max(260, el.clientWidth), H = spec.h || 170, padT = 10, padB = 22, padL = 2, padR = 2;
@@ -353,10 +365,12 @@ function dibujarLinea(el, spec){
   const pad = (v1 - v0) * 0.08; v1 += pad; if (!spec.desdeCero) v0 -= pad;
   const X = t => padL + (t - t0) / (t1 - t0) * (W - padL - padR);
   const Y = v => padT + (1 - (v - v0) / (v1 - v0)) * (H - padT - padB);
+  const monEje = spec.cur || S.cfg.moneda, disp = spec.cur ? (x => x) : aMoneda;
+  const fmtV = v => spec.cur ? moneyLocal(v, spec.cur) : money(v);
   let g = '';
   for (let i = 0; i < 3; i++){
     const v = v0 + (v1 - v0) * (i + 0.5) / 3, y = Y(v);
-    g += `<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="4" y="${y - 4}" font-size="10" fill="var(--muted)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(compact(v))}</text>`;
+    g += `<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="4" y="${y - 4}" font-size="10" fill="var(--muted)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(ejeLabel(disp(v), disp(v1) - disp(v0), monEje))}</text>`;
   }
   const fx = spec.fechaFmt || ((t1 - t0) > 400*864e5 ? fMes : fCorta);
   g += `<text x="2" y="${H - 5}" font-size="10" fill="var(--muted)">${esc(fx(new Date(t0)))}</text><text x="${W - 2}" y="${H - 5}" font-size="10" fill="var(--muted)" text-anchor="end">${esc(fx(new Date(t1)))}</text>`;
@@ -377,7 +391,7 @@ function dibujarLinea(el, spec){
     <rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/></svg>`;
   const svg = box.querySelector('svg'), cur = svg.querySelector('.cur'), dots = svg.querySelectorAll('.dot');
   const cerca = (pts, t) => { let b = pts[0]; for (const p of pts) if (Math.abs(+p.t - t) < Math.abs(+b.t - t)) b = p; return b; };
-  const tipTxt = (t, puntos) => `<b>${esc(fLarga(new Date(t)))}</b> · ` + puntos.map((p,i) => `<span style="color:${series[i].color}">●</span> ${esc(series[i].nombre ? series[i].nombre + ' ' : '')}<b>${esc(money(p.v))}</b>`).join(' &nbsp;');
+  const tipTxt = (t, puntos) => `<b>${esc(fLarga(new Date(t)))}</b> · ` + puntos.map((p,i) => `<span style="color:${series[i].color}">●</span> ${esc(series[i].nombre ? series[i].nombre + ' ' : '')}<b>${esc(fmtV(p.v))}</b>`).join(' &nbsp;');
   const reset = () => {
     cur.setAttribute('opacity', 0); dots.forEach(d => d.setAttribute('opacity', 0));
     if (spec.hoy){ const t = Math.min(Date.now(), t1); const base = cerca(series[0].pts, t); tip.innerHTML = tipTxt(+base.t, series.map(s => cerca(s.pts, +base.t))); }
@@ -410,12 +424,15 @@ function donut(items, centro){
 
 // ---------------- Helpers de series ----------------
 const PERIODOS = [['1S',7],['1M',30],['3M',91],['YTD',0],['1A',365],['Todo',-1]];
-function cortar(pts, per){
+function inicioPeriodo(per){
   const d = (PERIODOS.find(p => p[0] === per) || PERIODOS[2])[1];
-  if (d < 0) return pts;
+  if (d < 0) return null;
   const ahora = new Date();
-  const desde = d === 0 ? new Date(ahora.getFullYear(), 0, 1) : new Date(Date.now() - d * 864e5);
-  return pts.filter(p => p.t >= desde);
+  return d === 0 ? new Date(ahora.getFullYear(), 0, 1) : new Date(Date.now() - d * 864e5);
+}
+function cortar(pts, per){
+  const desde = inicioPeriodo(per);
+  return desde ? pts.filter(p => p.t >= desde) : pts;
 }
 function serieTotal(sel){
   const m = S.m;
@@ -452,6 +469,9 @@ function vResumen(){
   const pts = cortar(conAhora(hist, m.total), S.periodo);
   const ini = pts.length > 1 ? pts[0].v : null;
   const dif = ini != null ? m.total - ini : null;
+  const desdeP = inicioPeriodo(S.periodo);
+  const incompleto = pts.length > 1 && (!desdeP || (+pts[0].t - +desdeP) > 2 * 864e5);
+  const etiqueta = incompleto ? 'desde el ' + fCorta(pts[0].t) + ' (inicio del histórico)' : S.periodo;
   const ganancia = m.cuentas.reduce((s,c) => s + (c.gananciaEur || 0), 0);
   const aport = m.cuentas.reduce((s,c) => s + (c.objetivo ? c.aportMesEur : 0), 0);
   const prog = m.objetivo.progreso;
@@ -461,12 +481,12 @@ function vResumen(){
   <div class="card">
     <div class="label">Total</div>
     <div class="big num">${money(m.total)}</div>
-    <div class="delta num ${dif == null ? 'muted' : (dif >= 0 ? 'pos' : 'neg')}">${dif == null ? 'Sin histórico para este periodo' : signed(dif) + ' (' + pct(ini ? dif/ini : null) + ') · ' + S.periodo}</div>
+    <div class="delta num ${dif == null ? 'muted' : (dif >= 0 ? 'pos' : 'neg')}">${dif == null ? 'Sin histórico para este periodo' : signed(dif) + ' (' + pct(ini ? dif/ini : null) + ') · ' + etiqueta}</div>
     ${chipsPeriodo()}
     ${lineChart({series:[{pts, color, area:true}]})}
   </div>
   <div class="stats">
-    <div class="stat"><div class="label">Ganancia 2026</div><div class="v num ${ganancia >= 0 ? 'pos' : 'neg'}">${signed(ganancia)}</div></div>
+    <div class="stat"><div class="label">Ganancia ${new Date().getFullYear()}</div><div class="v num ${ganancia >= 0 ? 'pos' : 'neg'}">${signed(ganancia)}</div></div>
     <div class="stat"><div class="label">Aportación/mes</div><div class="v num">${money(aport)}</div></div>
     <button class="stat" data-nav="objetivo"><div class="label">Objetivo</div><div class="v num">${pct(prog, 1, false)}</div></button>
   </div>
@@ -489,8 +509,9 @@ function vCuentas(){
 function vCuenta(){
   const m = S.m, c = m.porNombre[S.cuenta];
   if (!c){ S.view = 'cuentas'; return vCuentas(); }
-  const hist = m.historico.filter(h => c.nombre in h.porCuenta).map(h => ({t:h.t, v:h.porCuenta[c.nombre]}));
-  const pts = cortar(conAhora(hist, c.eur), S.periodo);
+  const tasa = m.rates[c.moneda] || 1;
+  const hist = m.historico.filter(h => c.nombre in h.porCuenta).map(h => ({t:h.t, v:h.porCuenta[c.nombre] / tasa}));
+  const pts = cortar(conAhora(hist, c.valor), S.periodo);
   const pos = m.posiciones.filter(p => p.cuenta === c.nombre && (p.eur || p.cantidad));
   const ops = m.compras.filter(o => o.cuenta === c.nombre).map(o => ({fecha:o.fecha, t:o.tipo, d:o.activo + (o.unidades ? ' · ' + o.unidades.toLocaleString('de-DE',{maximumFractionDigits:4}) + ' u. a ' + o.precio.toLocaleString('de-DE',{maximumFractionDigits:4}) : ''), v:o.importe}))
     .concat(m.movs.filter(o => o.cuenta === c.nombre).map(o => ({fecha:o.fecha, t:o.importe >= 0 ? 'Aportación' : 'Retirada', d:o.nota, v:o.importe})))
@@ -512,7 +533,7 @@ function vCuenta(){
       <div class="big num" style="font-size:32px">${moneyLocal(c.valor, c.moneda)}</div>
       ${extranjera ? `<div class="label num">≈ ${money(c.eur)}</div>` : ''}</div></div>
     ${chipsPeriodo()}
-    ${lineChart({series:[{pts, color:'var(--accent)', area:true}], vacio:'Este gráfico se irá llenando con las fotos diarias del histórico.'})}
+    ${lineChart({series:[{pts, color:'var(--accent)', area:true}], cur:c.moneda, vacio:'Todavía hay pocos datos. El gráfico de esta cuenta aparecerá cuando haya unos días de fotos guardadas.'})}
   </div>
   <div class="card rows">
     <div class="row"><span class="k">Ganancia desde 1 ene</span><span class="v num ${cls(c.ganancia)}">${c.ganancia == null ? '—' : (S.hide ? OCULTO : (c.ganancia >= 0 ? '+' : '−') + moneyLocal(Math.abs(c.ganancia), c.moneda))}</span></div>
